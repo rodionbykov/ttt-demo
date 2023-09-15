@@ -1,0 +1,144 @@
+<cfoutput>
+    <header id="about" class="header">
+        <div class="container">
+
+        </div>
+    </header>
+    <section id="features" class="section">
+    <div class="container">
+    <div class="row">
+        <h2>Summary Report</h2>
+    <cfif ArrayLen(rc.messages) GT 0>
+        <cfloop array="#rc.messages#" index="m">
+                <div class="alert alert-success">
+                <strong>#m#</strong>
+            </div>
+        </cfloop>
+    </cfif>
+    <cfif ArrayLen(rc.errors) GT 0>
+        <cfloop array="#rc.errors#" index="m">
+                <div class="alert alert-danger">
+                <strong>#m#</strong>
+            </div>
+        </cfloop>
+    </cfif>
+    <table class="table table-condensed table-hover">
+    <thead>
+    <tr>
+    <form action="index.cfm?do=reports.summary" method="post">
+    <td>
+    <div class="input-group date" data-provide="datepicker">
+            <input type="text" class="form-control datepicker" name="from" value="#DateFormat(rc.from, 'YYYY-mm-dd')#" >
+    <div class="input-group-addon">
+        <span class="glyphicon glyphicon-th"></span>
+    </div>
+</div>
+</td>
+<td>
+<div class="input-group date" data-provide="datepicker">
+        <input type="text" class="form-control datepicker" name="to" value="#DateFormat(rc.to, 'YYYY-mm-dd')#" >
+    <div class="input-group-addon">
+        <span class="glyphicon glyphicon-th"></span>
+    </div>
+</div>
+</td>
+    <td colspan="2">
+        <button type="submit" class="btn btn-primary">Report</button>
+    </td>
+</form>
+</tr>
+<tr>
+    <th>Activity</th>
+    <th>Task</th>
+    <th>Project</th>
+    <th>Duration</th>
+</tr>
+</thead>
+<tbody>
+    <cfset totalDuration = 0 />
+<!---
+<cfloop array="#rc.arrReport#" index="r">
+--->
+    <cfset currentTask = "" />
+    <cfoutput query="rc.qryReport">
+        <cfset activity = rc.qryReport.activity[rc.qryReport.CurrentRow] />
+        <cfset subDuration = 0 />
+
+        <cfif StructKeyExists(activity, "task")>
+            <cfif StructKeyExists(activity.task, "project")>
+                <cfset aTaskTitle = activity.task.title & " (" & activity.task.project.name & ")" />
+            <cfelse>
+                <cfset aTaskTitle = activity.task.title />
+            </cfif>
+            <cfif aTaskTitle NEQ currentTask>
+            <tr>
+                <td colspan="4"><strong>#aTaskTitle#</strong></td>
+            </tr>
+                <cfset currentTask = aTaskTitle />
+            </cfif>
+        </cfif>
+
+        <tr>
+            <td><a href="index.cfm?do=activities.view&amp;id=#activity.id#">#activity.description#</a></td>
+            <td>
+            <cfif StructKeyExists(activity, "task")>
+                    <a href="index.cfm?do=tasks.view&amp;id=#activity.task.id#">#activity.task.title#</a>
+            <cfelse>
+                    &nbsp;
+            </cfif>
+            </td>
+            <td>
+            <cfif StructKeyExists(activity, "task") AND StructKeyExists(activity.task, "project")>
+                    <a href="index.cfm?do=projects.view&amp;id=#activity.task.project.id#">#activity.task.project.name#</a>
+            <cfelse>
+                    &nbsp;
+            </cfif>
+            </td>
+            <td>#ConvertSecondsToTimeString(duration)#</td>
+        </tr>
+        <cfset totalDuration = totalDuration + duration />
+        <cfset subDuration = subDuration + duration />
+        <!---
+        <cfif aTaskTitle NEQ currentTask>
+        <tr>
+                <td colspan="3" style="text-align: right;">
+                    <em>Task Total time</em>
+                </td>
+            <td><em>#ConvertSecondsToTimeString(subDuration)#</em></td>
+        </tr>
+        <cfset currentTask = aTaskTitle />
+        <cfset subDuration = 0 />
+        </cfif>
+        --->
+        </cfoutput>
+        <tr>
+            <td colspan="3" style="text-align: right;">
+                <strong>Total time</strong>
+            </td>
+            <td><strong>#ConvertSecondsToTimeString(totalDuration)#</strong></td>
+        </tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</cfoutput>
+
+<cfscript>
+
+    function convertSecondsToTimeString(seconds) {
+        local.hours = arguments.seconds \ 3600;
+        local.minutes = (arguments.seconds \ 60) mod 60;
+        local.seconds = (arguments.seconds) mod 60;
+    return numberformat(local.hours, "0") & "h" & numberformat(local.minutes, "00") & "m";
+}
+
+</cfscript>
+
+<script>
+    $( function() {
+        $( ".datepicker" ).datepicker( {
+            dateFormat: "yy-mm-dd"
+        } );
+    } );
+</script>

@@ -1,0 +1,16 @@
+<VirtualHost *:80>
+    DocumentRoot "C:/Apache24/htdocs/virtual/ttt-demo"
+    ServerName demo.ttt
+    DirectoryIndex index.cfm index.htm index.html
+
+    ProxyPreserveHost On
+    ProxyPassReverse / ajp://localhost:8009/
+    RewriteEngine On
+    RewriteRule ^(.+\.cf[cm])$ ajp://localhost:8009$1 [P]
+
+    <Directory "C:/Apache24/htdocs/virtual/ttt-demo">
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
